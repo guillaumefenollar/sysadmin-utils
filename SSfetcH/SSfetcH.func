@@ -1,0 +1,280 @@
+#!/bin/bash
+
+############## Fonctions de menus #########################################################
+
+function agent_ssh
+{
+#### Active l'agent SSH pour éviter de retaper le mot de passe de la clé privé de l'utilisateur
+echo "Tentative d'activation de l'agent SSH..."
+if [[ -e /home/$utilisateur/.ssh/id_dsa ]]
+then
+        ssh-add /home/$utilisateur/.ssh/id_dsa
+elif [[ -e /home/$utilisateur/.ssh/id_rsa ]]
+then
+        ssh-add /home/$utilisateur/.ssh/id_rsa
+else
+        echo "Clé non trouvé, veuillez renseigner le chemin absolu de la clé privée de l'utilisateur :"
+        read $chemin_cle
+        ssh-add $chemin_cle
+fi
+if [[ $? != "0" ]]
+then
+	echo "Echec de l'activation de l'agent SSH. La connexion par mot de passe système va être utilisée"
+fi
+}
+
+function menu_solo
+{
+clear
+echo "Veuillez renseigner l'adresse ou le nom de la machine cible : "
+read client
+echo "Avec quel utilisateur allez vous vous connecter à la machine cible? ["`echo $USER`"] : "
+read utilisateur
+if [[ $utilisateur == "" ]]
+ then
+  utilisateur=$USER
+fi
+
+agent_ssh
+
+mkdir -p /home/$utilisateur/.SSfetcH/$client/ 2>/dev/null
+cd /home/$utilisateur/.SSfetcH/$client/
+
+
+clear
+echo "Voici les actions qui vous sont proposées :"
+PS3='Veuillez faire votre choix : '
+select choix_action_solo in "Modifier un fichier" "Naviguer dans l'arborescence" "Revenir à un état précédent" "Quitter";do
+                  if [[ $choix_action_solo == "Modifier un fichier" ]]    #################################################### Modifier
+                        then
+				echo "Veuillez renseigner le chemin du fichier que vous souhaitez modifier"
+				read fichier
+				fichier_courant=/home/$utilisateur/.SSfetcH/$client/"`basename $fichier`"-"`date +%s`"
+				scp -q -o StrictHostKeyChecking=no $utilisateur@$client:/$fichier $fichier_courant
+				echo "$fichier_courant>$fichier" >> .SSfetcH.map   ## Mapping permettant de connaitre le vrai Path du fichier d'origine
+				cp $fichier_courant $fichier_courant~
+				$FAV_EDITOR $fichier_courant
+				echo "Souhaitez vous consigner les modifications (Cela remplacera le fichier original sur la machine distante!) - O ou N [N]"
+                                read rep
+                                if [[ $rep == "O" ]]
+                                then
+                                        scp -o StrictHostKeyChecking=no $fichier_courant $utilisateur@$client:/$fichier
+                                        continue
+                                else
+                                        echo "Abandon de l'opération"
+                                        continue
+                                fi
+
+                        elif [[ $choix_action_solo == "Naviguer dans l'arborescence" ]]   ########################################  Naviguer
+                         then
+				ssh -A $utilisateur@$client
+
+			elif [[ $choix_action_solo == "Revenir à un état précédent" ]]   ########################################  Backup
+			 then
+				#############Ceci va permettre de restaurer l'état précédent d'un fichier, en utilisant le fichier de backup.
+				echo "Choisissez le nom de fichier que vous souhaitez restaurer à son état précédent:"
+				ls -B -m /home/$utilisateur/.SSfetcH/$client/
+				echo ""
+				echo "Choisissez un fichier a restaurer"
+				read fichier_sauve
+				if [[ -e ./$fichier_sauve ]]
+					then
+					##### Met dans une variable le véritable path du fichier d'origine pour le placer au bon endroit.
+					fichier="`cat .SSfetcH.map | grep $fichier_sauve | cut -d ">" -f 2`"
+					echo $fichier
+					echo "Voulez vous consulter ce fichier avant de le consigner sur le poste distant? - O ou N [O]"
+					read rep
+					if [[ $rep == "O" ]]
+						then
+						less $fichier_sauve~
+					fi
+						echo "Êtes vous sûr de vouloir consigner le fichier (Cela remplacera le fichier original sur la machine distante!) - O ou N [N]"
+                                		read rep
+                                			if [[ $rep == "O" ]]
+                                			 then
+                                        			scp -o StrictHostKeyChecking=no $fichier_sauve~ $utilisateur@$client:/$fichier
+                                        			continue
+                                			else
+                                        			echo "Abandon de l'opération"
+                                        			continue
+                                			fi
+					else
+					echo "Le fichier n'existe pas"
+				fi
+                	elif [[ $choix_action_solo == "Quitter" ]] ############################################################# Quitter
+                 	then 
+                        	echo "Au revoir!"
+                        	exit 0
+                	else      
+	               echo "Saisie invalide"
+                fi
+done
+}
+
+function menu_multi
+{
+clear
+echo "Avec quel utilisateur allez vous vous connecter aux machines désirées? ["`echo $USER`"] : "
+read utilisateur
+if [[ $utilisateur == "" ]]
+ then
+  utilisateur=$USER
+fi
+
+agent_ssh
+
+clear
+echo "Voici les actions qui vous sont proposées :"
+PS3='Veuillez faire votre choix : '
+select choix_mode_multi in "Choisir les postes manuellement" "Choisir les postes via un fichier" "Quitter";do
+                  if [[ $choix_mode_multi == "Choisir les postes manuellement" ]]
+                        then
+				echo "Veuillez renseigner les noms/adresses des postes, séparés par de simples espaces"
+				read ad_liste
+				echo "Selon ce mode d'opération, voici les actions qui s'offrent à vous : "
+				PS3='Veuillez faire votre choix : '
+				select choix_action_multi in "Deployer un fichier" "Restaurer un fichier précédemment déployé" "Revenir au menu précédent";do
+					if [[ $choix_action_multi == "Deployer un fichier" ]]
+						then
+							deploiement_multi
+					elif [[ $choix_action_multi == "Restaurer un fichier précédemment déployé" ]]
+						then
+							restauration_multi
+					elif [[ $choix_action_multi == "Revenir au menu précédent" ]]
+						then
+							continue
+					else 
+						echo "Saisie invalide"
+					fi
+				done
+                        elif [[ $choix_mode_multi == "Choisir les postes via un fichier" ]]
+                         then
+				echo "Veuillez renseigner le chemin (absolu ou relatif) de la liste des postes ciblés."
+				read ad_liste
+				if [[ ! -f $ad_liste ]]
+				then
+					echo "Ce fichier n'existe pas ou n'est pas d'un format valable"
+					break
+				fi
+				ad_liste="`cat $ad_liste`"
+                                echo "Selon ce mode d'opération, voici les actions qui s'offrent à vous : "
+                                PS3='Veuillez faire votre choix : '
+                                select choix_action_multi in "Deployer un fichier" "Restaurer un fichier précédemment déployé" "Revenir au menu précédent";do
+                                        if [[ $choix_action_multi == "Deployer un fichier" ]]
+                                                then
+                                                        deploiement_multi
+                                        elif [[ $choix_action_multi == "Restaurer un fichier précédemment déployé" ]]
+                                                then
+                                                        restauration_multi
+                                        elif [[ $choix_action_multi == "Revenir au menu précédent" ]]
+                                                then
+                                                        continue
+                                        else 
+                                                echo "Saisie invalide"
+                                        fi
+                                done
+                	elif [[ $choix_mode_multi == "Quitter" ]]
+                 	 then 
+                        	echo "Au revoir!"
+                        	exit 0
+                	else      
+	               echo "Saisie invalide"
+                fi
+done
+}
+
+function deploiement_multi
+{
+		
+				echo "Veuillez saisir le chemin absolu du fichier à déployer ..."
+				read fichier
+				if [[ ! -f $fichier ]]
+				then
+					echo "Le fichier sélectionné n'existe pas ou n'est pas d'un format valable"
+					echo "Voici pour information la liste des fichiers du dossier parent que vous avez choisi : "
+					ls -A "`dirname $fichier`"
+					break
+				fi
+                   for client in $ad_liste
+                                do   ### Sauvegarde
+                                        mkdir -p /home/$utilisateur/.SSfetcH/$client/ 2>/dev/null
+					fichier_courant=/home/$utilisateur/.SSfetcH/$client/"`basename $fichier`"-"`date +%s`"
+                                        scp -q -o StrictHostKeyChecking=no $utilisateur@$client:/$fichier $fichier_courant
+					if [[ $? != "0" ]]
+                                                then
+                                                echo "Le fichier $fichier n'existait pas sur la machine $client, aucune sauvegarde n'a été faite."
+					else
+						echo "$fichier_courant>$fichier" >> /home/$utilisateur/.SSfetcH/$client/.SSfetcH.map
+                                        fi
+					echo "Le fichier va être envoyé sur $client ..."
+                                        scp -o StrictHostKeyChecking=no $fichier $utilisateur@$client:/$fichier
+                    done
+                                if [[ $? == "0" ]]
+                                        then
+					echo ""
+                                        echo "Le déploiement du fichier s'est bien déroulé sur tous les postes ciblés"
+					echo ""
+                                fi
+}
+
+function restauration_multi
+{
+		  for client in $ad_liste
+		    do
+			echo "Concernant le poste $client, choisissez le nom de fichier que vous souhaitez restaurer à son état précédent:"
+                                ls -B -m /home/$utilisateur/.SSfetcH/$client/
+                                echo ""
+                                echo "Choisissez un fichier a restaurer"
+                                read fichier_sauve
+                                if [[ -e /home/$utilisateur/.SSfectH/$client/$fichier_sauve ]]
+                                        then
+                                        ##### Met dans une variable le véritable path du fichier d'origine pour le placer au bon endroit.
+                                        fichier="`cat /home/$utilisateur/.SSfetcH/$client/.SSfetcH.map | grep $fichier_sauve | cut -d ">" -f 2`"
+                                        echo $fichier
+                                        echo "Voulez vous consulter ce fichier avant de le consigner sur le poste distant? - O ou N [O]"
+                                        read rep
+                                        if [[ $rep == "O" ]]
+                                                then
+                                                less $fichier_sauve~
+                                        fi
+                                                echo "Êtes vous sûr de vouloir consigner le fichier (Cela remplacera le fichier original sur la machine distante!) - O ou N [N]"
+                                                read rep
+                                                        if [[ $rep == "O" ]]
+                                                         then
+                                                                scp -o StrictHostKeyChecking=no $fichier_sauve~ $utilisateur@$client:/$fichier
+                                                                continue
+                                                        else
+                                                                echo "Abandon de l'opération"
+                                                                continue
+                                                        fi
+		
+                                  else
+                                        echo "Le fichier n'existe pas"
+                                fi
+		done
+}
+
+function menu_principal
+{
+clear
+echo "Sur quel éventail de postes voulez vous faire des modifications?"
+PS3='Veuillez faire votre choix : '
+select choix_mode in "Un seul poste" "Plusieurs postes" "Quitter"; do
+        if [[ $choix_mode == "Un seul poste" ]]
+        then
+	menu_solo
+	elif [[ $choix_mode == "Plusieurs postes" ]]
+	then
+	menu_multi
+	elif [[ $choix_mode == "Quitter" ]]
+	then	
+	echo "Au revoir!"
+	exit 0
+	else
+		echo 	"Saisie incorrecte"
+	fi
+done
+}
+
+
+

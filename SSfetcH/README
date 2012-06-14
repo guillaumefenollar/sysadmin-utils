@@ -1,0 +1,29 @@
+#### Documentation pour SSfetcH v1 #######
+
+#### Installation
+
+Il est tout d'abord nécessaire d'extraire les fichiers de l'archive SSfetcH-<version>.tar.gz
+Ainsi, voici la commande s'appliquant à la version 1.0 de SSfetcH
+# tar xvzf SSfetcH-1.0.tar.gz
+
+Cette extraction donnera 4 fichiers, listés ci-après:
+* README : Fichier de documentation affichant la présente aide
+* SSfetcH : fichier exécutable destiné au dossier /usr/bin/
+* SSfetcH.func : fichier de fonction contenant le comportement du script, qui se trouvera après installation dans /var/lib/SSfetcH
+* install-SSfetcH.sh : script d'installation de l'applicatif SSfetcH.
+
+Il est nécessaire d'exécuter ce dernier script afin d'installer les différents élements du script au bon endroit. La commande suivante lancera l'installation:
+# ./install-SSfetcH.sh
+À noter qu'il est nécessaire de lancer cette installation via le compte root (à précéder d'un "sudo" en cas d'utilisation depuis un compte utilisateur normal)
+Les 4 fichiers doivent se trouver dans le même dossier pour que l'installation se déroule sans problème.
+
+### Utilisation
+Pour lancer SSfetcH, tapez simplement dans un terminal:
+$ SSfetcH
+Il est possible de modifier l'utilitaire qui sera utilisé pour l'édition des fichiers,
+en modifiant la variable $FAV_EDITOR, situé en top du script placé dans /usr/bin/
+
+### Purge de la base
+Pour purger la base des fichiers sauvegardés localement, il est nécessaire d'ajouter le
+paramètre --clean
+
