@@ -27,7 +27,7 @@ then
 fi
 
 echo "10-The script has stopped unexpectedly" > $STATUS_FILE
-echo "Stopping Slave..." > $LOG_FILE
+echo "Backup started at $(date %T)" > $LOG_FILE
 
 ### Stop slave
 
@@ -92,11 +92,11 @@ echo "" >> $MAIL_TO_SEND
 
 for i in $VSERVERS_LIST
 do
-	STATUS_FILE=/home/mysql-slave-backup/logs/$i.status  ## Where to write a global status (Into Vservers)
-	REPORT=$(cat $STATUS_FILE|cut -f2 -d'-')
-	echo "~ $i - $REPORT" >> $MAIL_TO_SEND
+    STATUS_FILE=/home/mysql-slave-backup/logs/$i.status
 	if [[ $(cat $STATUS_FILE|cut -f1 -d'-') != 0 ]]
 	then
+		REPORT=$(cat $STATUS_FILE|cut -f2 -d'-')
+		echo "~ $i - $REPORT" >> $MAIL_TO_SEND
 		ERRCODE=1
 	fi
 
