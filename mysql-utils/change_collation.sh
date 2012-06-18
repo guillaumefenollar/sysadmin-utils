@@ -6,7 +6,7 @@ TBL_LIST=$($mysql_cmd -N -s -r -e 'use xwiki;show tables;')
 
 for tbl_name in $TBL_LIST;
 do
-$mysql_cmd -e "alter table xwiki.$tbl_name convert to character set utf8 collate utf8_general_ci;"
+$mysql_cmd -e "alter table xwiki.$tbl_name convert to character set utf8 collate utf8_bin;"
 done
 
 echo "Here the result of the operation:"
