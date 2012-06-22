@@ -21,7 +21,9 @@ $MYSQL_COMMAND -e "ALTER TABLE $db.$tb ENGINE = $TO_ENGINE;"
 
 done
 
-echo "" 
+$MYSQL_COMMAND -e "SELECT table_name,Engine,table_collation FROM information_schema.tables WHERE table_schema = DATABASE();"
+
+echo ""
 echo ""
 
 done
