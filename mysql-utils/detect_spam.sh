@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ## Built to work a on XWiki Schema (3.x or 4.x)
-nbcoms=7  ## Number of comments above which you get alerted (Spam Threshold).
+nbcoms=50  ## Number of comments above which you get alerted (Spam Threshold).
 
 DATABASES=$(mysql -N -s -r -e 'show databases'|grep -v ^information_schema$|grep -v ^mysql$) ## You can exclude DBs from the list here (adding a grep -v)
 
