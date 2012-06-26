@@ -15,8 +15,6 @@ CHECK_COMMANDS=$($MYSQL_COMMAND -e "use $db; select count(XWO_NAME) as coms,XWO_
         then
                 echo "We have found more than $nbcoms comments in database  *** $db *** :"
                 $MYSQL_COMMAND -e "use $db; select count(XWO_NAME) as coms,XWO_NAME as doc from xwikiobjects where XWO_CLASSNAME='XWiki.XWikiComments' GROUP BY XWO_NAME HAVING coms >= $nbcoms;"
-        else
-                echo "OK"
         fi
                 echo ""
 
@@ -49,8 +47,6 @@ DATABASES=$($MYSQL_COMMAND -N -s -r -e 'show databases'|grep -v ^information_sch
 	        then
         	        echo "We have found more than $nbcoms comments in database  *** $db *** :"
                 	$MYSQL_COMMAND -e "use $db; select count(XWO_NAME) as coms,XWO_NAME as doc from xwikiobjects where XWO_CLASSNAME='XWiki.XWikiComments' GROUP BY XWO_NAME HAVING coms >= $nbcoms;"
-		else
-			echo "OK"
         	fi
 	                echo ""
 	done
