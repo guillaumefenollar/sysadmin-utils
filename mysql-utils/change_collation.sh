@@ -13,7 +13,7 @@ TBL_LIST=$($mysql_cmd -N -s -r -e "use $db;show tables;")
 
 for tbl_name in $TBL_LIST;
 do
-$mysql_cmd -e "alter table $db.$tbl_name convert to character set $to_character_set collate to_collation;"
+$mysql_cmd -e "alter table $db.$tbl_name convert to character set $to_character_set collate $to_collation;"
 done
 
 echo "Here the result of the operation:"
