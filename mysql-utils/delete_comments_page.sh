@@ -6,7 +6,7 @@ DB="xwiki"
 #
 
 
-spam=$(mysql -N -e "use $DB;select XWO_ID from xwikiobjects where XWO_NAME=$PAGE;")
+spam=$(mysql -N -e "use $DB;select XWO_ID from xwikiobjects where XWO_NAME=$PAGE and XWO_CLASSNAME='XWiki.XWikiComments';")
 ERRCODE=0
 DELETED=0
 ## For each comment on the page, we delete it from the six tables
