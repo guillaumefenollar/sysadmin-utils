@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 ## Variables
-PAGE='"Blog.Blog Action Day WaterWiki"'
+PAGE='"XWiki.BadComments"'
 DB="xwiki"
 #
 
@@ -26,7 +26,7 @@ done
 ## Report and ending
 if [[ $ERRCODE == 1 ]]
 then
-        echo "A problem occured during the comments deletion"
+        echo "A problem occured during the comments deletion - $DELETED comments deleted anyway"
 else
         echo "OK - $DELETED comments deleted"
 fi
