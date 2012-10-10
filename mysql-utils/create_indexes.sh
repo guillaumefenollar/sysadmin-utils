@@ -23,21 +23,31 @@ ase_requestid;activitystream_events;(ase_requestid(200))
 ase_page_date;activitystream_events;(ase_page,ase_date)
 xda_docid1;xwikiattrecyclebin;(xda_docid)"
 
+DATABASES="$($mysql_cmd -N -s -e "show databases")"
+
 exec 2>&1 1> $log_file
 
-
-for i in $INDEXES
+for db in $DATABASES
 do
-	tb="$(echo $i|cut -d';' -f2)"
-	name_i="$(echo $i|cut -d';' -f1)"
-	col_i="$(echo $i|cut -d';' -f3)"
+   if [[ "$($mysql_cmd -N -s -e "use $db;show tables" |grep xwikidoc)" == "" ]]
+   then
+ 	echo "Database $db is not a valid XWiki Database"
+   else
 
-	HAS_INDEX="$($mysql_cmd -N -s -e "use xwiki; show index from $tb"|grep $name_i)"
+	for i in $INDEXES
+	do
+		tb="$(echo $i|cut -d';' -f2)"
+		name_i="$(echo $i|cut -d';' -f1)"
+		col_i="$(echo $i|cut -d';' -f3)"
 
-if [[ $HAS_INDEX == "" ]]
-then
-	$mysql_cmd -N -s -e "ALTER TABLE xwiki.$tb ADD INDEX $name_i$col_i;"
-else
-	echo "$name_i for $tb is already there"
-fi
+		HAS_INDEX="$($mysql_cmd -N -s -e "use $db; show index from $tb"|grep $name_i)"
+
+	if [[ $HAS_INDEX == "" ]]
+	then
+		$mysql_cmd -N -s -e "ALTER TABLE $db.$tb ADD INDEX $name_i$col_i;"
+	else
+		echo "$name_i for $tb (database $db) is already there"
+	fi
+	done
+   fi
 done
