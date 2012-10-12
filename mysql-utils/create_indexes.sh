@@ -2,26 +2,26 @@
 # This script help to create activity stream index which is missing in XWiki version <4.2
 ##CONFIG##
 mysql_cmd="mysql -u root"
-log_file=".$0.log"
+log_file="$0.log"
 ##
 ##INDEXES## format is : one index per line. name of the index, table, column name. ; separated.
 
-INDEXES="xwl_value;xwikilargestrings;(xwl_value(50))
-xwd_parent;xwikidoc;(xwd_parent(50))
-xwd_class_xml;xwikidoc;(xwd_class_xml(20))
-xwr_isdiff;xwikircs;(xwr_isdiff)
-xws_number;xwikistatsdoc;(XWS_NUMBER)
-xws_classname;xwikistatsdoc;(XWS_CLASSNAME)
-xwr_number;xwikistatsreferer;(XWR_NUMBER)
-xwr_classname;xwikistatsreferer;(XWR_CLASSNAME)
-xwr_referer;xwikistatsreferer;(XWR_REFERER(50))
-xwv_user_agent;xwikistatsvisit;(XWV_USER_AGENT(255))
-xwv_cookie;xwikistatsvisit;(XWV_COOKIE(255))
-xwv_classname;xwikistatsvisit;(XWV_CLASSNAME)
-xwv_number;xwikistatsvisit;(XWV_NUMBER)
-ase_requestid;activitystream_events;(ase_requestid(200))
-ase_page_date;activitystream_events;(ase_page,ase_date)
-xda_docid1;xwikiattrecyclebin;(xda_docid)"
+INDEXES="XWL_VALUE;xwikilargestrings;(xwl_value(50))
+XWD_PARENT;xwikidoc;(xwd_parent(50))
+XWD_CLASS_XML;xwikidoc;(xwd_class_xml(20))
+XWR_ISDIFF;xwikircs;(xwr_isdiff)
+XWS_NUMBER;xwikistatsdoc;(XWS_NUMBER)
+XWS_CLASSNAME;xwikistatsdoc;(XWS_CLASSNAME)
+XWR_NUMBER;xwikistatsreferer;(XWR_NUMBER)
+XWR_CLASSNAME;xwikistatsreferer;(XWR_CLASSNAME)
+XWR_REFERER;xwikistatsreferer;(XWR_REFERER(50))
+XWV_USER_AGENT;xwikistatsvisit;(XWV_USER_AGENT(255))
+XWV_COOKIE;xwikistatsvisit;(XWV_COOKIE(255))
+XWV_CLASSNAME;xwikistatsvisit;(XWV_CLASSNAME)
+XWV_NUMBER;xwikistatsvisit;(XWV_NUMBER)
+ASE_REQUESTID;activitystream_events;(ase_requestid(200))
+ASE_PAGE_DATE;activitystream_events;(ase_page,ase_date)
+XDA_DOCID1;xwikiattrecyclebin;(xda_docid)"
 
 DATABASES="$($mysql_cmd -N -s -e "show databases")"
 
@@ -40,11 +40,15 @@ do
 		name_i="$(echo $i|cut -d';' -f1)"
 		col_i="$(echo $i|cut -d';' -f3)"
 
-		HAS_INDEX="$($mysql_cmd -N -s -e "use $db; show index from $tb"|grep $name_i)"
+		HAS_INDEX="$($mysql_cmd -N -s -e "use $db; show index from $tb where column_name="$col_i";")"
 
 	if [[ $HAS_INDEX == "" ]]
 	then
-		$mysql_cmd -N -s -e "ALTER TABLE $db.$tb ADD INDEX $name_i$col_i;"
+		echo "Creating index for table $tb, column $col_i"
+		$mysql_cmd -N -s -e "ALTER TABLE $db.$tb ADD INDEX $name_i$col_i;" 1>/dev/null
+	elif [[ $HAS_INDEX == ]]
+	then
+
 	else
 		echo "$name_i for $tb (database $db) is already there"
 	fi
