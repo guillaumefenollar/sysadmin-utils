@@ -34,7 +34,7 @@ AppWithinMinutes.ClassEditSheet
 Panels.DocumentInformation
 XWiki.LuceneSearchAdmin
 XWiki.WatchListMessage
-Panels.Quicklinks
+Panels.QuickLinks
 Panels.Welcome"
 
 ######################
