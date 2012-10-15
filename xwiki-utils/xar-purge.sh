@@ -2,7 +2,7 @@
 #
 ## Configuration ##
 
-dest_dir="/home/xwiki/XARs/"
+dest_dir="XARs/"
 
 excluded="Main.WebHome
 Main.Welcome
@@ -19,7 +19,6 @@ XWiki.DefaultSkin
 XWiki.XWikiSkins
 Sandbox.WebHome
 XWiki.XWikiPreferences
-Panels.Quicklinks
 Main.Search
 Main.WebSearch
 XWiki.XWikiSyntax
@@ -42,15 +41,15 @@ Panels.Welcome"
 
 exec 2> $0.err
 
-### Version input
-echo "What version of XE are you using?"
-read xar_version
+errcount=0
 
-if [[ "`echo ${xar_version:0:1} | egrep [1-9]`" == "" ]]
+
+if [[ "`which unzip &>/dev/null; echo $?`" != "0"  || "`which zip &>/dev/null; echo $?`" != "0" ]]
 then
-	echo "This version is not a real version. (type for example: 4.1.4)"
+	echo "Zip or/and Unzip utils have not been found on your system. Exiting..."
 	exit 1
 fi
+
 ### Type input
 echo "Choose a type between XE and XEM [default:XE]"
 read package_type
@@ -61,13 +60,23 @@ then
 	exit 1
 fi
 
+### Version input
+echo "What version of XE are you using?"
+read xar_version
+
+if [[ "`echo ${xar_version:0:1} | egrep [3-5]`" == "" ]]
+then
+	echo "This version is not a real version. (type for example: 4.1.4)"
+	exit 1
+fi
+
 ### Downloading standard XAR
 echo "Downloading XWiki $package_type for version $xar_version ..."
-if [[ $package_type == "XE" && $package_type == "" ]]
+if [[ $package_type == "XE" || $package_type == "" ]]
 then
-	wget -O "$package_type-$xar_version.xar" http://maven.xwiki.org/releases/org/xwiki/enterprise/xwiki-enterprise-ui-all/$xar_version/xwiki-enterprise-ui-all-$xar_version.xar 1>/dev/null
+	wget -O "XARs/$package_type-$xar_version.xar" http://maven.xwiki.org/releases/org/xwiki/enterprise/xwiki-enterprise-ui-all/$xar_version/xwiki-enterprise-ui-all-$xar_version.xar 1>/dev/null
 else
-	wget -O "$package_type-$xar_version.xar" http://maven.xwiki.org/releases/org/xwiki/manager/xwiki-manager-ui-all/$xar_version/xwiki-manager-ui-all-$xar_version.xar 1>/dev/null
+	wget -O "XARs/$package_type-$xar_version.xar" http://maven.xwiki.org/releases/org/xwiki/manager/xwiki-manager-ui-all/$xar_version/xwiki-manager-ui-all-$xar_version.xar 1>/dev/null
 
 	if [[ $? != '0' ]]
 	then
@@ -78,8 +87,42 @@ fi
 
 ### Unzip 
 
-mkdir $package_type-$xar_version.tmp
-cd $package_type-$xar_version.tmp
-unzip ../$package_type-$xar_version.xar
+mkdir "$package_type-$xar_version.tmp" ; unzip XARs/$package_type-$xar_version.xar -d $package_type-$xar_version.tmp/
+cd "$package_type-$xar_version.tmp/"
 
+### Deleting the flagged files
+
+for doc in $excluded
+do
+	docpage="`echo $doc|cut -d'.' -f2`"
+	docspace="`echo $doc|cut -d'.' -f1`"
+
+	# Deleting xml file
+	rm $docspace/$docpage.xml
+	if [[ $? != "0" ]]
+	then
+		echo "ERROR during the deletion of $docpage in space $docspace (file not found)."
+		errcount="`expr $errcount + 1`"
+	fi
+	
+	# Deleting the occurence in package.xml
+	sed "/$docspace.$docpage<\/file>/d" package.xml > package.xml.new
+	if [[ $? == "0" ]]
+	then
+		mv package.xml.new package.xml
+	else
+		echo "The page $docpage from space $docspace haven't been found (file not in package.xml)."
+	fi
+done
+
+## Packing the new .xar package
+echo "Cleaning is over. Building the new xar..."
+
+zip -r ../$package_type-$xar_version.xar *
+cd ../
+mv $package_type-$xar_version.xar $dest_dir
+rm -rf $package_type-$xar_version.tmp
+
+echo "Moving new xar package in $dest_dir/$package_type-$xar_version.xar"
+echo "Operation OK - $errcount files with error. Please check $0.err log file for more details about eventual issues."
 
