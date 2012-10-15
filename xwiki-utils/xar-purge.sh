@@ -43,6 +43,16 @@ exec 2> $0.err
 
 errcount=0
 
+if [ ! -d $dest_dir ]
+then
+	echo "Directory $dest_dir doesn't exist! I'll try to create it."
+	mkdir $dest_dir
+	if [[ $? != "0" ]]
+	then
+		echo "$dest_dir cannot be created. Perhaps a lack of rights?"
+		exit 1
+	fi
+fi
 
 if [[ "`which unzip &>/dev/null; echo $?`" != "0"  || "`which zip &>/dev/null; echo $?`" != "0" ]]
 then
@@ -87,7 +97,7 @@ fi
 
 ### Unzip 
 
-mkdir "$package_type-$xar_version.tmp" ; unzip XARs/$package_type-$xar_version.xar -d $package_type-$xar_version.tmp/
+mkdir "$package_type-$xar_version.tmp" ; unzip XARs/$package_type-$xar_version.xar -d $package_type-$xar_version.tmp/ 1>/dev/null
 cd "$package_type-$xar_version.tmp/"
 
 ### Deleting the flagged files
@@ -118,7 +128,7 @@ done
 ## Packing the new .xar package
 echo "Cleaning is over. Building the new xar..."
 
-zip -r ../$package_type-$xar_version.xar *
+zip -r ../$package_type-$xar_version.xar * 1>/dev/null
 cd ../
 mv $package_type-$xar_version.xar $dest_dir
 rm -rf $package_type-$xar_version.tmp
