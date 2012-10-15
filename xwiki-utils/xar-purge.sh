@@ -70,6 +70,11 @@ then
 	exit 1
 fi
 
+if [[ $package_type == "" ]] 
+then
+	package_type="XE"
+fi
+
 ### Version input
 echo "What version of XE are you using?"
 read xar_version
@@ -128,11 +133,11 @@ done
 ## Packing the new .xar package
 echo "Cleaning is over. Building the new xar..."
 
-zip -r ../$package_type-$xar_version.xar * 1>/dev/null
+zip -r ../$package_type-$xar_version-purged.xar * 1>/dev/null
 cd ../
-mv $package_type-$xar_version.xar $dest_dir
+mv $package_type-$xar_version-purged.xar $dest_dir
 rm -rf $package_type-$xar_version.tmp
 
-echo "Moving new xar package in $dest_dir/$package_type-$xar_version.xar"
+echo "Moving new xar package in $dest_dir/$package_type-$xar_version-purged.xar"
 echo "Operation OK - $errcount files with error. Please check $0.err log file for more details about eventual issues."
 
