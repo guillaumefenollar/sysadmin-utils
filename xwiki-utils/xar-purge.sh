@@ -2,7 +2,7 @@
 #
 ## Configuration ##
 
-dest_dir="XARs/"
+dest_dir="/home/xwiki/XARs/"
 
 excluded="Main.WebHome
 Main.Welcome
