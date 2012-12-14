@@ -1,7 +1,40 @@
 #!/bin/bash
 
+### LOCAL MACHINE
+
+pid=$(pgrep puppet)
+
+if [[ $(echo $pid|wc -w) > 1 ]]
+then
+        /bin/echo "There is more than 1 process running for puppet on machine `hostname` . Killing them all..."
+        if [[ $1 != "--test" ]]
+        then
+        for p in $pid
+        do
+               /bin/kill $p
+        done
+        pid=""
+        fi
+fi
+
+#If puppetd doesn't run or if the pid retrieved isn't the same as in agent.pid file
+if [[ "$pid" == "" || "$(grep $pid /var/run/puppet/agent.pid)" == "" ]]
+then
+        /bin/echo "Puppet was not running on machine `hostname`, trying to start it..."
+        if [[ $1 != "--test" ]]
+        then
+                /usr/bin/killall puppet 1>/dev/null
+                /usr/bin/killall puppetd 1>/dev/null
+                /usr/sbin/puppetd
+        fi
+fi
+
+
+
 ### VSERVERS VMs
 if [[ -x `which vserver 2>/dev/null` ]]; then
+
+vserver_bin="$(which vserver)"
 
 #For each vserver running, we use the context number
 for ctx in $(ls /proc/virtual/|grep -v info|grep -v status)
@@ -10,7 +43,7 @@ do
 vm=$(grep -l $ctx /etc/vservers/*/context|cut -d'/' -f 4)
 
 #checking if puppet runs right now
-pid="$(/usr/sbin/vserver $vm exec pgrep puppet)"
+pid="$(/${vserver_bin} $vm exec pgrep puppet)"
 
 if [[ $(echo $pid|wc -w) > 1 ]]
 then
@@ -19,7 +52,7 @@ then
         then
         for p in $pid
         do
-                /usr/sbin/vserver $vm exec kill $p
+                /${vserver_bin} $vm exec kill $p
         done
         pid=""
         fi
@@ -31,9 +64,9 @@ then
         /bin/echo "Puppet was not running on VM $vm, hosted by `hostname`, trying to start it..."
         if [[ $1 != "--test" ]]
         then
-                /usr/sbin/vserver $vm exec /usr/bin/killall puppet 1>/dev/null
-                /usr/sbin/vserver $vm exec /usr/bin/killall puppetd 1>/dev/null
-                /usr/sbin/vserver $vm exec /usr/sbin/puppetd
+                /${vserver_bin} $vm exec /usr/bin/killall puppet 1>/dev/null
+                /${vserver_bin} $vm exec /usr/bin/killall puppetd 1>/dev/null
+                /${vserver_bin} $vm exec /usr/sbin/puppetd
         fi
 fi
 
