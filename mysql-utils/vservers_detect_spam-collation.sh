@@ -14,7 +14,7 @@ echo "" > $mailfile
 
 for ctx in $(ls /proc/virtual/|grep -v info|grep -v status)
 do
-vm=$(grep $ctx /etc/vservers/*/context|cut -d'/' -f 4)
+vm=$(grep -l $ctx /etc/vservers/*/context|cut -d'/' -f 4)
 
         echo "Working on VM $vm :" >> $mailfile
         echo "Checking for collation..." >> $mailfile
