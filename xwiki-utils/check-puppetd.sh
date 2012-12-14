@@ -2,7 +2,7 @@
 
 ### LOCAL MACHINE
 
-pid=$(pgrep puppet)
+pid=$(pgrep -f 'puppet\ agent')
 
 if [[ $(echo $pid|wc -w) > 1 ]]
 then
@@ -43,7 +43,7 @@ do
 vm=$(grep -l $ctx /etc/vservers/*/context|cut -d'/' -f 4)
 
 #checking if puppet runs right now
-pid="$(/${vserver_bin} $vm exec pgrep puppet)"
+pid="$(/${vserver_bin} $vm exec pgrep -f 'puppet\ agent')"
 
 if [[ $(echo $pid|wc -w) > 1 ]]
 then
@@ -80,7 +80,7 @@ if [[ -x `which vzlist 2>/dev/null` ]]; then
 ctid_all=$(vzlist --all | grep -v "CTID" | awk '{print $1}')
 for ctid in $ctid_all
 do
-pid="$(/usr/sbin/vzctl exec $ctid pgrep puppet)"
+pid="$(/usr/sbin/vzctl exec $ctid pgrep -f 'puppet\ agent')"
 
 if [[ $(echo $pid|wc -w) > 1 ]]
 then
