@@ -40,20 +40,20 @@ do
 		name_i="$(echo $i|cut -d':' -f1)"
 		col_i="$(echo $i|cut -d':' -f3)"
 		size="$(echo $i|cut -d':' -f4)"
-		
+
 		HAS_INDEX="$($mysql_cmd -N -s -e "use $db; show index from $tb where column_name=\"$col_i\";")"
 
 	# If no index have been created for this column
 	if [[ $HAS_INDEX == "" ]]
 	then
 		echo "Creating index for table $tb, column $col_i"
-		$mysql_cmd -N -s -e "ALTER TABLE $db.$tb ADD INDEX $name_i$col_i$size;" 1>/dev/null
+		$mysql_cmd -N -s -e "ALTER TABLE $db.$tb ADD INDEX $name_i($col_i$size);" 1>/dev/null
 	# If an index already exists with another name (duplicate)
 	elif [[ "$(echo "$HAS_INDEX" |wc -l)" -gt 1  ]]
 	then
 		DUP_INDEX="$($mysql_cmd -N -s -e "use $db; show index from $tb where column_name=\"$col_i\" and key_name != \"$name_i\";")"
 		DUP_INDEX_NAME=$(echo $DUP_INDEX|awk '{print $3}')
-		$mysql_cmd -N -s -e "use xwiki; DROP INDEX $DUP_INDEX_NAME ON $tb;"
+		$mysql_cmd -N -s -e "use $db; DROP INDEX $DUP_INDEX_NAME ON $tb;"
 		echo "A duplicate index for column $col_i on table $tb has been deleted."
 	else
 	# Index is already created for the column
