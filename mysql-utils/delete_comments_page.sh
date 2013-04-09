@@ -5,6 +5,11 @@ PAGE='"XWiki.BadComments"'
 DB="xwiki"
 #
 
+# You can send the page to the script, first argument, in form Space.Page. But use a single quote, and a double quote after. Like '"Space.Page"'.
+if [[ $1 != "" ]]
+then
+        PAGE="$1"
+fi
 
 spam=$(mysql -N -e "use $DB;select XWO_ID from xwikiobjects where XWO_NAME=$PAGE and XWO_CLASSNAME='XWiki.XWikiComments';")
 ERRCODE=0
