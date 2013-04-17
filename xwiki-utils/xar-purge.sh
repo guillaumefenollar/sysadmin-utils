@@ -89,9 +89,9 @@ fi
 echo "Downloading XWiki $package_type for version $xar_version ..."
 if [[ $package_type == "XE" || $package_type == "" ]]
 then
-	wget -O "XARs/$package_type-$xar_version.xar" http://maven.xwiki.org/releases/org/xwiki/enterprise/xwiki-enterprise-ui-all/$xar_version/xwiki-enterprise-ui-all-$xar_version.xar 1>/dev/null
+	wget -O "XARs/$package_type-$xar_version.xar" -s http://maven.xwiki.org/releases/org/xwiki/enterprise/xwiki-enterprise-ui-all/$xar_version/xwiki-enterprise-ui-all-$xar_version.xar 1>/dev/null
 else
-	wget -O "XARs/$package_type-$xar_version.xar" http://maven.xwiki.org/releases/org/xwiki/manager/xwiki-manager-ui-all/$xar_version/xwiki-manager-ui-all-$xar_version.xar 1>/dev/null
+	wget -O "XARs/$package_type-$xar_version.xar" -s http://maven.xwiki.org/releases/org/xwiki/manager/xwiki-manager-ui-all/$xar_version/xwiki-manager-ui-all-$xar_version.xar 1>/dev/null
 
 	if [[ $? != '0' ]]
 	then
