@@ -33,7 +33,7 @@ while [[ $dst_database == "" ]];do
   read dst_database
 done
 
-$mysql_cmd $dst_database < $0-indexes.tmp
+$mysql_cmd -f $dst_database < $0-indexes.tmp
 
 trap SIGINT SIGQUIT SIGTERM TERM
 echo
